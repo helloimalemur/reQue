@@ -40,8 +40,8 @@ async fn index(socket_addr: SocketAddr, pool: &rocket::State<MySqlPool>) -> &'st
 }
 
 
-#[post("/plugins/shopify", data = "<data>")]
-async fn shopify_webhook(
+#[post("/your/endpoint", data = "<data>")]
+async fn your_endpoint(
     socket_addr: SocketAddr,
     request: RRequest,
     pool: &rocket::State<MySqlPool>,
@@ -226,7 +226,7 @@ pub async fn main() {
         .manage::<MySqlPool>(pool)
         .mount(
             "/",
-            routes![index, shopify_webhook, slow_test_server],
+            routes![index, your_endpoint, slow_test_server],
         )
         .attach(CORS)
         .launch()
