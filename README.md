@@ -58,10 +58,13 @@ api_key = "yourapikey"
 ```
 
 ## test and dev functions;
+### test using a [slow server](https://github.com/helloimalemur/Slow-Server)
 ```shell
 # create entry;
 curl -X POST "http://127.0.0.1:8030/plugins/shopify/" -H "Content-Type: application/json" -d '{"name": "John Doe", "age": 30, "city": "New York"}'
-# create a lot of test entries;
+#create a slow-server test entry;
+curl -X POST "http://127.0.0.1:8030/delay/30/" -H "Content-Type: application/json" -d '{"name": "John Doe", 30, "city": "New York"}'
+# create a lot of slow-server test entries;
 for i in {00..500}; do curl -X POST "http://127.0.0.1:8030/delay/3/" -d "$i"; done;
 ```
 ```sql
