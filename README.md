@@ -16,6 +16,8 @@ flowchart LR
     B --> C{reQue}
     C -->|/your/endpoint| D[This Slow Server]
     C -->|/your/other/endpoint?with=params| E[That Slow Server]
+    F[database]<-->|request queue| C{reQue}
+%%    C{reQue} -->|request queue| F[database]
 ```
 
 
