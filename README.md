@@ -34,7 +34,12 @@ bash -e install.sh
 Please feel free to open a pull request
 
 ## Bring your own SQL server
-    docker run -p 127.0.0.1:3306:3306  --name mdb -e MARIADB_ROOT_PASSWORD=Password123! -d mariadb:latest
+    docker run -p 127.0.0.1:3306:3306  --name mdb -e MARIADB_ROOT_PASSWORD=Password123! -d mariadb:latest;
+    mariadb -h 127.0.0.1 -uroot -pPassword123! -e 'CREATE DATABASE reque;';
+    mariadb -D reque -h 127.0.0.1 -uroot -pPassword123! -e 'CREATE TABLE `requests` (`id` int(11) NOT NULL AUTO_INCREMENT,`method` varchar(255) NOT NULL,`host` varchar(255) NOT NULL,`port` varchar(255) NOT NULL,`uri` varchar(255) NOT NULL,`headers` varchar(255) NOT NULL,`body` varchar(6255) NOT NULL,PRIMARY KEY (`id`));';
+    mariadb -h 127.0.0.1 -uroot -pPassword123! -e "CREATE USER 'dev'@'%' IDENTIFIED BY 'password';";
+    mariadb -h 127.0.0.1 -uroot -pPassword123! -e "GRANT ALL PRIVILEGES ON reque.* TO 'dev'@'%';";
+    mariadb -h 127.0.0.1 -uroot -pPassword123! -e "FLUSH PRIVILEGES;";
 
 ## Create database
 ```sql
