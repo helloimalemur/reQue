@@ -99,6 +99,8 @@ for i in {00..500}; do curl -X POST "http://127.0.0.1:8030/delay/3/" -d "$i"; do
 [//]: # (INSERT INTO requests &#40;method, host, port, uri, headers, body&#41; VALUES &#40;"method", "host", "port", "uri", "headers", "body"&#41;;)
 [//]: # (```)
 
+### Security considerations
+     If the front-end and back-end servers behave differently in relation to the (possibly obfuscated) Transfer-Encoding header, then they might disagree about the boundaries between successive requests, leading to request smuggling vulnerabilities. 
 
 ### Resources
     https://www.baeldung.com/cs/tokens-vs-sessions
