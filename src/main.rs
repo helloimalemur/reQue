@@ -199,8 +199,10 @@ pub async fn main() {
                 body = out_bind.get("body");
 
                 // println!("{} - {} - {} - {}", method, host, uri, body);
-                send_stored_request(http_proto.clone(), http_dest.clone(), uri.clone(), body.clone(), &interval_pool).await;
-                delete_request_from_db(uri.clone(), body.clone(), &interval_pool).await;
+                let send_success = send_stored_request(http_proto.clone(), http_dest.clone(), uri.clone(), body.clone(), &interval_pool).await;
+                if send_success {
+                    delete_request_from_db(uri.clone(), body.clone(), &interval_pool).await;
+                }
             }
 
             // let result: String = out.expect("cannot execute query").get("host");

@@ -38,14 +38,23 @@ pub async fn delete_request_from_db(uri:String, body: String, pool: &Pool<MySql>
 }
 
 
-pub async fn send_stored_request(http_proto: String, http_dest: String, uri: String, body: String, pool: &Pool<MySql>) {
+pub async fn send_stored_request(http_proto: String, http_dest: String, uri: String, body: String, pool: &Pool<MySql>) -> bool {
     let built_uri = format!("{}://{}{}", http_proto, http_dest, uri);
     println!("Sending Request;\n{}", built_uri);
     println!("{}\n", body);
-    let _res = reqwest::Client::new()
+    let res = reqwest::Client::new()
         .post(built_uri)
         .body(body)
         .send()
         .await;
 
+    let mut success = false;
+    if res.is_ok() {
+        match res.unwrap().status().as_u16() {
+            (200) => success = true,
+            _ => success = false
+
+        }
+    }
+    success
 }
