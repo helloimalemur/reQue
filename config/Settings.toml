@@ -1,9 +1,9 @@
 ## general app, database, and external api settings
 database_url = "mysql://dev:password@localhost:3306/reque"
-database_name = "reque"
-api_key = "yourapikey"
-log_path = "log/requests.log"
-## reque settings
-http_proto = "http"
-http_dest = "localhost:3000"
-reque_interval = "3"
+database_name = "reque" ## name of queue database
+api_key = "yourapikey" ## for api-key protection - not currently enabled on any endpoints
+log_path = "log/requests.log" ## logging is currently not working
+## reque destination endpoint settings
+http_proto = "http" ## protocol of final destination server
+http_dest = "localhost:3000" ## final destination server
+reque_interval = "3" ## slow trickling requests to dest based on interval in seconds

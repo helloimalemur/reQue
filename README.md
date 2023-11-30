@@ -41,6 +41,7 @@ Please feel free to open a pull request
     mariadb -h 127.0.0.1 -uroot -pPassword123! -e "GRANT ALL PRIVILEGES ON reque.* TO 'dev'@'%';";
     mariadb -h 127.0.0.1 -uroot -pPassword123! -e "FLUSH PRIVILEGES;";
 
+
 ## Create database
 ```sql
 CREATE DATABASE reque;
@@ -74,8 +75,16 @@ database_name = "reque"
 api_key = "yourapikey"
 ```
 
-## test and dev functions;
-### test using a [slow server](https://github.com/helloimalemur/Slow-Server)
+## test and dev;
+
+#### 1. Start reque
+```shell
+cargo run
+```
+
+#### 2. Start a test server to receive the funneled requests, such as [slow server](https://github.com/helloimalemur/Slow-Server) or "./test_server.py [<port>] within this repo"
+
+#### 3. Send requests into reque, which will be queue'd and funnel'd to the destination endpoint specified in Settings.toml
 ```shell
 # create entry;
 curl -X POST "http://127.0.0.1:8030/plugins/shopify/" -H "Content-Type: application/json" -d '{"name": "John Doe", "age": 30, "city": "New York"}'
@@ -84,9 +93,11 @@ curl -X POST "http://127.0.0.1:8030/delay/30/" -H "Content-Type: application/jso
 # create a lot of slow-server test entries;
 for i in {00..500}; do curl -X POST "http://127.0.0.1:8030/delay/3/" -d "$i"; done;
 ```
-```sql
-INSERT INTO requests (method, host, port, uri, headers, body) VALUES ("method", "host", "port", "uri", "headers", "body");
-```
+#### 4. Observe requests being trickle funnel'd to the specified endpoint based on interval specified in Settings.toml
+
+[//]: # (```sql)
+[//]: # (INSERT INTO requests &#40;method, host, port, uri, headers, body&#41; VALUES &#40;"method", "host", "port", "uri", "headers", "body"&#41;;)
+[//]: # (```)
 
 
 ### Resources
