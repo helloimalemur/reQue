@@ -1,0 +1,9 @@
+## general app, database, and external api settings
+database_url = "mysql://dev:password@localhost:3306/reque"
+database_name = "reque"
+api_key = "yourapikey"
+log_path = "log/requests.log"
+## reque settings
+http_proto = "https"
+http_dest = "api.koonts.net"
+reque_interval = "3"
