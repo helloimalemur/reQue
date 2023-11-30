@@ -14,7 +14,9 @@ pub enum ApiKeyError {
 impl<'r> FromRequest<'r> for ApiKey<'r> {
     type Error = ApiKeyError;
 
-    async fn from_request(req: &'r Request<'_>) -> Outcome<ApiKey<'r>, (Status, ApiKeyError), Status> {
+    async fn from_request(
+        req: &'r Request<'_>,
+    ) -> Outcome<ApiKey<'r>, (Status, ApiKeyError), Status> {
         /// Returns true if `key` is a valid API key string.
         fn is_valid(key: &str) -> bool {
             key.len() > 0

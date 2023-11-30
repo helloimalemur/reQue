@@ -6,6 +6,11 @@ mod entities;
 mod fairings;
 mod manage_requests;
 
+use crate::entities::storedrequest::StoredRequest;
+use crate::fairings::de_construct_request::RRequest;
+use crate::manage_requests::request_funcs::{
+    delete_request_from_db, send_stored_request, write_request_to_db,
+};
 use config::Config;
 use log::info;
 use log::LevelFilter;
@@ -21,9 +26,6 @@ use rocket::tokio::time::{interval_at, Instant};
 use rocket::Response;
 use rocket::{custom, tokio};
 use sqlx::{MySqlPool, Row};
-use crate::entities::storedrequest::StoredRequest;
-use crate::fairings::de_construct_request::RRequest;
-use crate::manage_requests::request_funcs::{delete_request_from_db, send_stored_request, write_request_to_db};
 
 // // // // // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // // // // // //
@@ -39,7 +41,6 @@ async fn index(socket_addr: SocketAddr, pool: &rocket::State<MySqlPool>) -> &'st
     }
 }
 
-
 #[post("/your/endpoint", data = "<data>")]
 async fn your_endpoint(
     socket_addr: SocketAddr,
@@ -48,7 +49,6 @@ async fn your_endpoint(
     data: String,
     settings: &rocket::State<HashMap<String, String>>,
 ) -> Result<(), ErrorResponder> {
-
     println!("{:?}", request);
 
     let new_req = StoredRequest {
@@ -74,7 +74,6 @@ async fn slow_test_server(
     data: String,
     settings: &rocket::State<HashMap<String, String>>,
 ) -> Result<(), ErrorResponder> {
-
     println!("{:?}", request);
 
     let new_req = StoredRequest {
@@ -143,7 +142,7 @@ pub async fn main() {
         .build(settings_map.get("log_path").unwrap().as_str())
         .unwrap();
     #[allow(unused_variables)]
-        let log_config = LogConfig::builder()
+    let log_config = LogConfig::builder()
         .appender(Appender::builder().build("stdout", Box::new(stdout)))
         .appender(Appender::builder().build("requests", Box::new(requests)))
         // .logger(Logger::builder().build("app::backend::db", LevelFilter::Info))
@@ -170,7 +169,12 @@ pub async fn main() {
     // start re-occuring task to send requests slowly
     let http_dest: String = settings_map.get("http_dest").unwrap().to_string();
     let http_proto: String = settings_map.get("http_proto").unwrap().to_string();
-    let reque_interval: u64 = settings_map.get("reque_interval").unwrap().to_string().parse::<u64>().unwrap();
+    let reque_interval: u64 = settings_map
+        .get("reque_interval")
+        .unwrap()
+        .to_string()
+        .parse::<u64>()
+        .unwrap();
     tokio::spawn(async move {
         let start = Instant::now();
         let mut interval = interval_at(start, tokio::time::Duration::from_secs(reque_interval));
@@ -199,16 +203,20 @@ pub async fn main() {
                 body = out_bind.get("body");
 
                 // println!("{} - {} - {} - {}", method, host, uri, body);
-                let send_success = send_stored_request(http_proto.clone(), http_dest.clone(), uri.clone(), body.clone(), &interval_pool).await;
+                let send_success = send_stored_request(
+                    http_proto.clone(),
+                    http_dest.clone(),
+                    uri.clone(),
+                    body.clone(),
+                    &interval_pool,
+                )
+                .await;
                 if send_success {
                     delete_request_from_db(uri.clone(), body.clone(), &interval_pool).await;
                 }
             }
 
             // let result: String = out.expect("cannot execute query").get("host");
-
-
-
 
             // let resultt: String = out.expect("cannot execute query").get("host");
             // println!("{}", result);
@@ -226,10 +234,7 @@ pub async fn main() {
     custom(&config)
         .manage(settings_map.clone())
         .manage::<MySqlPool>(pool)
-        .mount(
-            "/",
-            routes![index, your_endpoint, slow_test_server],
-        )
+        .mount("/", routes![index, your_endpoint, slow_test_server])
         .attach(CORS)
         .launch()
         .await

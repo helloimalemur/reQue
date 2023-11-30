@@ -5,5 +5,5 @@ pub struct StoredRequest {
     pub port: u16,
     pub uri: String,
     pub headers: Vec<String>,
-    pub body: String
+    pub body: String,
 }

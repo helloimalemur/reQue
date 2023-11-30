@@ -9,7 +9,7 @@ pub struct RRequest {
     pub port: u16,
     pub uri: String,
     pub headers: Vec<String>,
-    pub body: String
+    pub body: String,
 }
 
 #[derive(Debug)]
@@ -22,8 +22,9 @@ pub enum RRequestError {
 impl<'r> FromRequest<'r> for RRequest {
     type Error = RRequestError;
 
-    async fn from_request(req: &'r Request<'_>) -> Outcome<RRequest, (Status, RRequestError), Status> {
-
+    async fn from_request(
+        req: &'r Request<'_>,
+    ) -> Outcome<RRequest, (Status, RRequestError), Status> {
         let rr = Outcome::Success(RRequest {
             method: req.method().to_string(),
             host: req.host().unwrap().to_string(),
