@@ -61,6 +61,8 @@ api_key = "yourapikey"
 ```shell
 # create entry;
 curl -X POST "http://127.0.0.1:8030/plugins/shopify/" -H "Content-Type: application/json" -d '{"name": "John Doe", "age": 30, "city": "New York"}'
+# create a lot of test entries;
+for i in {00..500}; do curl -X POST "http://127.0.0.1:8030/delay/3/" -d "$i"; done;
 ```
 ```sql
 INSERT INTO requests (method, host, port, uri, headers, body) VALUES ("method", "host", "port", "uri", "headers", "body");

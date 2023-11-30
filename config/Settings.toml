@@ -4,6 +4,6 @@ database_name = "reque"
 api_key = "yourapikey"
 log_path = "log/requests.log"
 ## reque settings
-http_proto = "https"
-http_dest = "api.koonts.net"
+http_proto = "http"
+http_dest = "localhost:3000"
 reque_interval = "3"

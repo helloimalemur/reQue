@@ -65,6 +65,31 @@ async fn shopify_webhook(
     Ok(())
 }
 
+#[post("/delay/<delay_num>", data = "<data>")]
+async fn slow_test_server(
+    delay_num: i64,
+    socket_addr: SocketAddr,
+    request: RRequest,
+    pool: &rocket::State<MySqlPool>,
+    data: String,
+    settings: &rocket::State<HashMap<String, String>>,
+) -> Result<(), ErrorResponder> {
+
+    println!("{:?}", request);
+
+    let new_req = StoredRequest {
+        method: request.method,
+        host: request.host,
+        port: 80,
+        uri: request.uri,
+        headers: request.headers,
+        body: data,
+    };
+
+    let _ = write_request_to_db(new_req.clone(), pool).await;
+
+    Ok(())
+}
 
 // // // // // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // // // // // //
@@ -118,7 +143,7 @@ pub async fn main() {
         .build(settings_map.get("log_path").unwrap().as_str())
         .unwrap();
     #[allow(unused_variables)]
-    let log_config = LogConfig::builder()
+        let log_config = LogConfig::builder()
         .appender(Appender::builder().build("stdout", Box::new(stdout)))
         .appender(Appender::builder().build("requests", Box::new(requests)))
         // .logger(Logger::builder().build("app::backend::db", LevelFilter::Info))
@@ -201,7 +226,7 @@ pub async fn main() {
         .manage::<MySqlPool>(pool)
         .mount(
             "/",
-            routes![index, shopify_webhook],
+            routes![index, shopify_webhook, slow_test_server],
         )
         .attach(CORS)
         .launch()
