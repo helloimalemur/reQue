@@ -9,7 +9,7 @@ Queue requests destined for slow backend servers when responding with 429 is una
 Created to be used in a microservice based architecture, placed in-front of the slow-responding service.
 Think of it as a per-service-mini-proxy that doesn't drop your requests when drinking from a firehose.
 
-Place reQue in front of your slow-to-consume / slow-to-respond backend servers to "trickle" incoming requests to them.
+### Place reQue in front of your slow-to-consume / slow-to-respond backend servers to "trickle" incoming requests to them.
 ```mermaid
 flowchart LR
     A[External ASYNC API Request/Webhook] -->|http/https| B(proxy)
