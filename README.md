@@ -31,7 +31,9 @@ bash -e install.sh
 ```
 
 ## Development and Collaboration
-Please feel free to open a pull request
+#### Feel free to open a pull request, please run the following prior to your submission please!
+    echo "Run clippy"; cargo clippy -- -D clippy::all
+    echo "Format source code"; cargo fmt -- --check
 
 ## Bring your own SQL server
     docker run -p 127.0.0.1:3306:3306  --name mdb -e MARIADB_ROOT_PASSWORD=Password123! -d mariadb:latest;
