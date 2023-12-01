@@ -19,7 +19,7 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
     ) -> Outcome<ApiKey<'r>, (Status, ApiKeyError), Status> {
         /// Returns true if `key` is a valid API key string.
         fn is_valid(key: &str) -> bool {
-            key.len() > 0
+            !key.is_empty()
         }
 
         match req.headers().get_one("x-api-key") {

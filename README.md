@@ -45,6 +45,7 @@ Please feel free to open a pull request
 ## Create database
 ```sql
 CREATE DATABASE reque;
+
 ```
 
 ## Create tables needed in the Database;

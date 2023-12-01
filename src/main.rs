@@ -162,7 +162,7 @@ pub async fn main() {
 
     println!("{}", database_url.clone());
 
-    let interval_pool = MySqlPool::connect(&database_url)
+    let interval_pool = MySqlPool::connect(database_url)
         .await
         .expect("database connection");
 
@@ -226,7 +226,7 @@ pub async fn main() {
     });
 
     // initialize database connection
-    let pool = MySqlPool::connect(&database_url)
+    let pool = MySqlPool::connect(database_url)
         .await
         .expect("database connection");
 
