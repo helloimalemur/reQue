@@ -1,9 +1,5 @@
 use crate::entities::storedrequest::StoredRequest;
-use chrono;
-use jwt_simple::reexports::rand;
-use jwt_simple::reexports::rand::distributions::Alphanumeric;
-use jwt_simple::reexports::rand::Rng;
-use sqlx::{MySql, MySqlPool, Pool, Row};
+use sqlx::{MySql, MySqlPool, Pool};
 
 // write created request to db
 pub async fn write_request_to_db(request: StoredRequest, pool: &rocket::State<MySqlPool>) {
@@ -37,7 +33,6 @@ pub async fn send_stored_request(
     http_dest: String,
     uri: String,
     body: String,
-    pool: &Pool<MySql>,
 ) -> bool {
     let built_uri = format!("{}://{}{}", http_proto, http_dest, uri);
     println!("Sending Request;\n{}", built_uri);

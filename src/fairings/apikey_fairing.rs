@@ -17,10 +17,8 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
     async fn from_request(
         req: &'r Request<'_>,
     ) -> Outcome<ApiKey<'r>, (Status, ApiKeyError), Status> {
-        /// Returns true if `key` is a valid API key string.
-        fn is_valid(key: &str) -> bool {
-            !key.is_empty()
-        }
+        let _e = ApiKeyError::InvalidError;
+        let _e2 = ApiKeyError::MissingError;
 
         match req.headers().get_one("x-api-key") {
             Some(key) => Outcome::Success(ApiKey(key)),

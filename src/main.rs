@@ -25,11 +25,12 @@ use rocket::request::Request;
 use rocket::tokio::time::{interval_at, Instant};
 use rocket::Response;
 use rocket::{custom, tokio};
-use sqlx::{MySqlPool, Row};
+use sqlx::{MySqlPool};
 
 // // // // // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // // // // // //
 
+// https://rocket.rs/v0.5/overview
 #[get("/")]
 async fn index(socket_addr: SocketAddr, pool: &rocket::State<MySqlPool>) -> &'static str {
     let is_pool_closed = pool.is_closed();
@@ -43,15 +44,14 @@ async fn index(socket_addr: SocketAddr, pool: &rocket::State<MySqlPool>) -> &'st
 
 #[post("/your/endpoint", data = "<data>")]
 async fn your_endpoint(
-    socket_addr: SocketAddr,
     request: RRequest,
-    pool: &rocket::State<MySqlPool>,
+    pool: &rocket::State<MySqlPool>, // see line 237, wrapping this in a State<> signals Rocket to bring this into scope
     data: String,
-    settings: &rocket::State<HashMap<String, String>>,
+    _settings: &rocket::State<HashMap<String, String>>,
 ) -> Result<(), ErrorResponder> {
     println!("{:?}", request);
 
-    let new_req = StoredRequest {
+    let new_req = StoredRequest { // src/entities/storedrequest.rs
         method: request.method,
         host: request.host,
         port: 80,
@@ -60,21 +60,19 @@ async fn your_endpoint(
         body: data,
     };
 
-    let _ = write_request_to_db(new_req.clone(), pool).await;
+    let _ = write_request_to_db(new_req.clone(), pool).await; // create stored request and insert into database, ignoring the result
 
     Ok(())
 }
 
 #[post("/delay/<delay_num>", data = "<data>")]
-async fn slow_test_server(
+async fn slow_test_server( // for testing purposes, https://github.com/helloimalemur/Slow-Server to simulate slow-responding server
     delay_num: i64,
-    socket_addr: SocketAddr,
     request: RRequest,
     pool: &rocket::State<MySqlPool>,
     data: String,
-    settings: &rocket::State<HashMap<String, String>>,
 ) -> Result<(), ErrorResponder> {
-    println!("{:?}", request);
+    println!("{:?} \n--- delay: {}", request, delay_num);
 
     let new_req = StoredRequest {
         method: request.method,
@@ -160,7 +158,7 @@ pub async fn main() {
     // set database_url string
     let database_url: &str = settings_map.get("database_url").unwrap().as_str();
 
-    println!("{}", database_url.clone());
+    println!("{}", database_url);
 
     let interval_pool = MySqlPool::connect(database_url)
         .await
@@ -189,18 +187,18 @@ pub async fn main() {
 
             // println!("{}", "...");
 
-            let mut method: String = String::new();
-            let mut host: String = String::new();
-            let mut uri: String = String::new();
-            let mut body: String = String::new();
+            // let mut method: String = String::new();
+            // let mut host: String = String::new();
+            let uri: String = String::new();
+            let body: String = String::new();
 
             let out_ok = out.is_ok();
             if out_ok {
-                let out_bind = out.unwrap();
-                method = out_bind.get("method");
-                host = out_bind.get("host");
-                uri = out_bind.get("uri");
-                body = out_bind.get("body");
+                // let out_bind = out.unwrap();
+                // method = out_bind.get("method");
+                // host = out_bind.get("host");
+                // uri = out_bind.get("uri");
+                // body = out_bind.get("body");
 
                 // println!("{} - {} - {} - {}", method, host, uri, body);
                 let send_success = send_stored_request(
@@ -208,7 +206,6 @@ pub async fn main() {
                     http_dest.clone(),
                     uri.clone(),
                     body.clone(),
-                    &interval_pool,
                 )
                 .await;
                 if send_success {

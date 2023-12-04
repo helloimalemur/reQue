@@ -25,6 +25,9 @@ impl<'r> FromRequest<'r> for RRequest {
     async fn from_request(
         req: &'r Request<'_>,
     ) -> Outcome<RRequest, (Status, RRequestError), Status> {
+        let _e = RRequestError::InvalidError;
+        let _e2 = RRequestError::MissingError;
+
         let rr = Outcome::Success(RRequest {
             method: req.method().to_string(),
             host: req.host().unwrap().to_string(),
