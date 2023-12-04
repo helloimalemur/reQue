@@ -179,28 +179,19 @@ pub async fn main() {
 
         loop {
             interval.tick().await;
-            // run_job(interval_pool.clone()).await;
             let out = sqlx::query("SELECT * FROM requests ORDER BY id ASC")
-                // .bind(session_id)
                 .fetch_one(&interval_pool.clone())
                 .await;
 
-            // println!("{}", "...");
-
-            // let mut method: String = String::new();
-            // let mut host: String = String::new();
+            // let mut method: String = String::new(); // filter incoming by method in the future?
+            // let mut host: String = String::new(); // filter by host in the future?
             let uri: String = String::new();
             let body: String = String::new();
 
             let out_ok = out.is_ok();
             if out_ok {
-                // let out_bind = out.unwrap();
-                // method = out_bind.get("method");
-                // host = out_bind.get("host");
-                // uri = out_bind.get("uri");
-                // body = out_bind.get("body");
 
-                // println!("{} - {} - {} - {}", method, host, uri, body);
+                // println!("{} - {}", uri, body);
                 let send_success = send_stored_request(
                     http_proto.clone(),
                     http_dest.clone(),
@@ -212,13 +203,6 @@ pub async fn main() {
                     delete_request_from_db(uri.clone(), body.clone(), &interval_pool).await;
                 }
             }
-
-            // let result: String = out.expect("cannot execute query").get("host");
-
-            // let resultt: String = out.expect("cannot execute query").get("host");
-            // println!("{}", result);
-
-            // delete_request_from_db(uri, body, &interval_pool).await;
         }
     });
 
