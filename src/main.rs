@@ -25,7 +25,7 @@ use rocket::request::Request;
 use rocket::tokio::time::{interval_at, Instant};
 use rocket::Response;
 use rocket::{custom, tokio};
-use sqlx::{MySqlPool};
+use sqlx::MySqlPool;
 
 // // // // // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // // // // // //
@@ -51,7 +51,8 @@ async fn your_endpoint(
 ) -> Result<(), ErrorResponder> {
     println!("{:?}", request);
 
-    let new_req = StoredRequest { // src/entities/storedrequest.rs
+    let new_req = StoredRequest {
+        // src/entities/storedrequest.rs
         method: request.method,
         host: request.host,
         port: 80,
@@ -66,7 +67,8 @@ async fn your_endpoint(
 }
 
 #[post("/delay/<delay_num>", data = "<data>")]
-async fn slow_test_server( // for testing purposes, https://github.com/helloimalemur/Slow-Server to simulate slow-responding server
+async fn slow_test_server(
+    // for testing purposes, https://github.com/helloimalemur/Slow-Server to simulate slow-responding server
     delay_num: i64,
     request: RRequest,
     pool: &rocket::State<MySqlPool>,
@@ -190,7 +192,6 @@ pub async fn main() {
 
             let out_ok = out.is_ok();
             if out_ok {
-
                 // println!("{} - {}", uri, body);
                 let send_success = send_stored_request(
                     http_proto.clone(),
