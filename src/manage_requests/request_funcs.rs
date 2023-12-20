@@ -2,7 +2,7 @@ use crate::entities::storedrequest::StoredRequest;
 use sqlx::{MySql, MySqlPool, Pool};
 
 // write created request to db
-pub async fn write_request_to_db(request: StoredRequest, pool: &rocket::State<MySqlPool>) {
+pub async fn write_request_to_db(request: StoredRequest<'_>, pool: &rocket::State<MySqlPool>) {
     let req = request.clone();
     let _insert = sqlx::query(
         "INSERT INTO requests (method, host, port, uri, headers, body)
@@ -19,10 +19,9 @@ pub async fn write_request_to_db(request: StoredRequest, pool: &rocket::State<My
     .unwrap();
 }
 
-pub async fn delete_request_from_db(uri: String, body: String, pool: &Pool<MySql>) {
-    let _delete = sqlx::query("DELETE FROM requests WHERE (uri)=? AND (body)=?")
-        .bind(uri)
-        .bind(body)
+pub async fn delete_request_from_db(id: i64, pool: &Pool<MySql>) {
+    let _delete = sqlx::query("DELETE FROM requests WHERE (id)=?")
+        .bind(id)
         .execute(pool)
         .await
         .unwrap();

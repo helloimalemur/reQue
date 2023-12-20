@@ -1,7 +1,9 @@
 #[macro_use]
 extern crate rocket;
+use chrono::Local;
 use std::collections::HashMap;
 use std::net::SocketAddr;
+
 mod entities;
 mod fairings;
 mod manage_requests;
@@ -25,29 +27,41 @@ use rocket::request::Request;
 use rocket::tokio::time::{interval_at, Instant};
 use rocket::Response;
 use rocket::{custom, tokio};
-use sqlx::MySqlPool;
+use sqlx::{MySqlPool, Row};
 
 // // // // // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // // // // // //
 
 // https://rocket.rs/v0.5/overview
 #[get("/")]
-async fn index(socket_addr: SocketAddr, pool: &rocket::State<MySqlPool>) -> &'static str {
-    let is_pool_closed = pool.is_closed();
+async fn index<'a>(
+    request: RRequest<'a>,
+    socket_addr: SocketAddr,
+    pool: &rocket::State<MySqlPool>,
+) -> Result<(), ErrorResponder> {
+    let _is_pool_closed = pool.is_closed();
     info!(target:"app::requests", "ROOT PATH - From: {}", socket_addr.ip().to_string());
-    if is_pool_closed {
-        "No Swimming"
-    } else {
-        "Hello, Astronauts!"
-    }
+    let now = Local::now().timestamp().to_string();
+    let new_req = StoredRequest {
+        // src/entities/storedrequest.rs
+        method: request.method,
+        host: request.host,
+        port: 80,
+        uri: request.uri,
+        headers: request.headers,
+        body: now,
+    };
+
+    let _ = write_request_to_db(new_req.clone(), pool).await; // create stored request and insert into database, ignoring the result
+
+    Ok(())
 }
 
-#[post("/your/endpoint", data = "<data>")]
-async fn your_endpoint(
-    request: RRequest,
+#[post("/plugins/shopify", data = "<data>")]
+async fn shopify_webhook<'a>(
+    request: RRequest<'a>,
     pool: &rocket::State<MySqlPool>, // see line 237, wrapping this in a State<> signals Rocket to bring this into scope
     data: String,
-    _settings: &rocket::State<HashMap<String, String>>,
 ) -> Result<(), ErrorResponder> {
     println!("{:?}", request);
 
@@ -67,14 +81,14 @@ async fn your_endpoint(
 }
 
 #[post("/delay/<delay_num>", data = "<data>")]
-async fn slow_test_server(
+async fn slow_test_server<'a>(
     // for testing purposes, https://github.com/helloimalemur/Slow-Server to simulate slow-responding server
     delay_num: i64,
-    request: RRequest,
+    request: RRequest<'a>,
     pool: &rocket::State<MySqlPool>,
     data: String,
 ) -> Result<(), ErrorResponder> {
-    println!("{:?} \n--- delay: {}", request, delay_num);
+    println!("{:?}\n--- delay: {}", request, delay_num);
 
     let new_req = StoredRequest {
         method: request.method,
@@ -129,8 +143,30 @@ pub async fn main() {
         .try_deserialize::<HashMap<String, String>>()
         .unwrap();
 
+    let reque_port = settings_map
+        .get("reque_service_port")
+        .expect("no service port found")
+        .parse::<u16>()
+        .expect("cannot parse service port");
+
+    let require_success = settings_map
+        .clone()
+        .get("require_success")
+        .expect("could not find require_success")
+        .to_string()
+        .parse::<bool>()
+        .unwrap();
+
+    let remove_from_queue_on_failure = settings_map
+        .clone()
+        .get("remove_from_queue_on_failure")
+        .expect("could not find remove_from_queue_on_failure")
+        .to_string()
+        .parse::<bool>()
+        .unwrap();
+
     let config = rocket::Config {
-        port: 8030,
+        port: reque_port,
         address: std::net::Ipv4Addr::new(0, 0, 0, 0).into(),
         ..rocket::Config::debug_default()
     };
@@ -184,24 +220,50 @@ pub async fn main() {
             let out = sqlx::query("SELECT * FROM requests ORDER BY id ASC")
                 .fetch_one(&interval_pool.clone())
                 .await;
-
             // let mut method: String = String::new(); // filter incoming by method in the future?
             // let mut host: String = String::new(); // filter by host in the future?
-            let uri: String = String::new();
-            let body: String = String::new();
+
+            let mut id: i64 = 0;
+            println!("{}", id);
+            let mut method: String = String::new();
+            println!("{}", method);
+            let mut host: String = String::new();
+            println!("{}", host);
+            let mut uri: String = String::new();
+            println!("{}", uri);
+            let mut body: String = String::new();
+            println!("{}", body);
 
             let out_ok = out.is_ok();
             if out_ok {
-                // println!("{} - {}", uri, body);
+                let out_bind = out.expect("could not get row");
+
+                id = out_bind.get("id");
+                method = out_bind.get("method");
+                uri = out_bind.get("uri");
+                body = out_bind.get("body");
+                host = out_bind.get("body");
+
+                println!("{}", id);
+                println!("{}", method);
+                println!("{}", host);
+                println!("{}", uri);
+                println!("{}", body);
+
                 let send_success = send_stored_request(
                     http_proto.clone(),
                     http_dest.clone(),
-                    uri.clone(),
-                    body.clone(),
+                    uri.to_string(),
+                    body.to_string(),
                 )
                 .await;
-                if send_success {
-                    delete_request_from_db(uri.clone(), body.clone(), &interval_pool).await;
+
+                if send_success && require_success {
+                    println!("Deleting Request: {} - {}", uri, body);
+                    delete_request_from_db(id, &interval_pool).await;
+                }
+                if remove_from_queue_on_failure {
+                    delete_request_from_db(id, &interval_pool).await;
                 }
             }
         }
@@ -216,7 +278,7 @@ pub async fn main() {
     custom(&config)
         .manage(settings_map.clone())
         .manage::<MySqlPool>(pool)
-        .mount("/", routes![index, your_endpoint, slow_test_server])
+        .mount("/", routes![index, shopify_webhook, slow_test_server])
         .attach(CORS)
         .launch()
         .await

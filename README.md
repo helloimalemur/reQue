@@ -30,11 +30,6 @@ flowchart LR
 bash -e install.sh
 ```
 
-## Development and Collaboration
-#### Feel free to open a pull request, please run the following prior to your submission please!
-    echo "Run clippy"; cargo clippy -- -D clippy::all
-    echo "Format source code"; cargo fmt -- --check
-
 ## Bring your own SQL server
     docker run -p 127.0.0.1:3306:3306  --name mdb -e MARIADB_ROOT_PASSWORD=Password123! -d mariadb:latest;
     mariadb -h 127.0.0.1 -uroot -pPassword123! -e 'CREATE DATABASE reque;';
@@ -42,12 +37,11 @@ bash -e install.sh
     mariadb -h 127.0.0.1 -uroot -pPassword123! -e "CREATE USER 'dev'@'%' IDENTIFIED BY 'password';";
     mariadb -h 127.0.0.1 -uroot -pPassword123! -e "GRANT ALL PRIVILEGES ON reque.* TO 'dev'@'%';";
     mariadb -h 127.0.0.1 -uroot -pPassword123! -e "FLUSH PRIVILEGES;";
-
+    
 
 ## Create database
 ```sql
 CREATE DATABASE reque;
-
 ```
 
 ## Create tables needed in the Database;
@@ -73,9 +67,18 @@ FLUSH PRIVILEGES;
 
 ## Edit config/Settings.toml
 ```toml
+## general app, database, and external api settings
 database_url = "mysql://dev:password@localhost:3306/reque"
-database_name = "reque"
-api_key = "yourapikey"
+database_name = "reque" ## name of queue database
+api_key = "yourapikey" ## for api-key protection - not currently enabled on any endpoints
+log_path = "log/requests.log" ## logging is currently not working
+reque_service_port = "8030"
+remove_from_queue_on_failure = "false"
+## reque destination endpoint settings
+http_proto = "http" ## protocol of final destination server
+http_dest = "localhost:7780" ## final destination server
+reque_interval = "3" ## slow trickling requests to dest based on interval in seconds
+require_success = "false" ## receiving slow server must respond with 200
 ```
 
 ## test and dev;
@@ -87,7 +90,7 @@ cargo run
 
 #### 2. Start a test server to receive the funneled requests, such as [slow server](https://github.com/helloimalemur/Slow-Server) or "./test_server.py [<port>] within this repo"
 
-#### 3. Send requests into reque, which will be queue'd and funnel'd to the destination endpoint specified in Settings.toml
+#### 3. Send requests into reque, which will be queued and funneled to the destination endpoint specified in Settings.toml
 ```shell
 # create entry;
 curl -X POST "http://127.0.0.1:8030/plugins/shopify/" -H "Content-Type: application/json" -d '{"name": "John Doe", "age": 30, "city": "New York"}'
@@ -96,14 +99,19 @@ curl -X POST "http://127.0.0.1:8030/delay/30/" -H "Content-Type: application/jso
 # create a lot of slow-server test entries;
 for i in {00..500}; do curl -X POST "http://127.0.0.1:8030/delay/3/" -d "$i"; done;
 ```
-#### 4. Observe requests being trickle funnel'd to the specified endpoint based on interval specified in Settings.toml
+#### 4. Observe requests being trickle funneled to the specified endpoint based on interval specified in Settings.toml
 
 [//]: # (```sql)
 [//]: # (INSERT INTO requests &#40;method, host, port, uri, headers, body&#41; VALUES &#40;"method", "host", "port", "uri", "headers", "body"&#41;;)
 [//]: # (```)
 
-### Security considerations
-     If the front-end and back-end servers behave differently in relation to the (possibly obfuscated) Transfer-Encoding header, then they might disagree about the boundaries between successive requests, leading to request smuggling vulnerabilities. 
+
+## Development and Collaboration
+#### Feel free to open a pull request, please run the following prior to your submission please!
+    echo "Run clippy"; cargo clippy -- -D clippy::all
+    echo "Format source code"; cargo fmt -- --check
+
+
 
 ### Resources
     https://www.baeldung.com/cs/tokens-vs-sessions
