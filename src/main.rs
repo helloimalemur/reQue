@@ -17,9 +17,7 @@ use config::Config;
 use log::info;
 use log::LevelFilter;
 use log4rs::append::console::ConsoleAppender;
-use log4rs::append::file::FileAppender;
-use log4rs::config::{Appender, Logger, Root};
-use log4rs::encode::pattern::PatternEncoder;
+use log4rs::config::{Appender, Root};
 use log4rs::Config as LogConfig;
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{Header, Status};
@@ -173,25 +171,16 @@ pub async fn main() {
 
     // setup logging request logging to file
     let stdout = ConsoleAppender::builder().build();
-    let requests = FileAppender::builder()
-        .encoder(Box::new(PatternEncoder::new("{d} - {m}{n}")))
-        .build(settings_map.get("log_path").unwrap().as_str())
-        .unwrap();
     #[allow(unused_variables)]
     let log_config = LogConfig::builder()
         .appender(Appender::builder().build("stdout", Box::new(stdout)))
-        .appender(Appender::builder().build("requests", Box::new(requests)))
-        // .logger(Logger::builder().build("app::backend::db", LevelFilter::Info))
-        .logger(
-            Logger::builder()
-                .appender("requests")
-                .additive(true)
-                .build("app::requests", LevelFilter::Info),
-        )
-        .build(Root::builder().appender("stdout").build(LevelFilter::Warn))
+        .build(Root::builder().appender("stdout").build(LevelFilter::Info))
         .unwrap();
+
+    log4rs::init_config(log_config).unwrap();
+
     // logging to info
-    info!(target: "app::requests","Starting");
+    warn!("app::requests");
 
     // set database_url string
     let database_url: &str = settings_map.get("database_url").unwrap().as_str();
